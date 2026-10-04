@@ -29,16 +29,8 @@
   #stage:active { cursor: grabbing; }
   header {
     position: fixed; top: 16px; left: 16px; right: 16px; pointer-events: none;
-    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+    display: flex; justify-content: flex-end; align-items: flex-start; gap: 12px;
   }
-  .card {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
-    padding: 12px 14px; backdrop-filter: blur(6px); pointer-events: auto; max-width: 340px;
-  }
-  h1 { font-size: 18px; margin: 0 0 4px; }
-  .card p { margin: 0; color: var(--muted); }
-  .specs { margin: 8px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 13px; }
-  .specs b { color: var(--text); font-weight: 600; }
   .controls { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
   button {
     font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line);
@@ -62,9 +54,6 @@
     color: var(--muted); font-size: 12px; pointer-events: none; text-align: center;
   }
   @media (max-width: 640px) {
-    header { flex-direction: column; }
-    .card { max-width: none; width: 100%; }
-    .specs { display: none; }
     .controls { justify-content: flex-start; }
     .label { font-size: 11px; }
     .label small { display: none; }
@@ -75,15 +64,6 @@
 <div id="stage"></div>
 <div id="labels"></div>
 <header>
-  <div class="card">
-    <h1>Feed the Egg</h1>
-    <p>Home food-waste digester: scraps in, power at the plug, soil out.</p>
-    <ul class="specs">
-      <li><b>Egg:</b> 90 cm tall × 60 cm wide, ~170 L (≈115 L slurry + gas dome)</li>
-      <li><b>Overall:</b> ~1.55 m tall, 80 cm base</li>
-      <li><b>Feeds:</b> ~1 kg scraps/day → ~0.25 kWh/day</li>
-    </ul>
-  </div>
   <div class="controls">
     <button id="btn-xray" aria-pressed="false">X-ray</button>
     <button id="btn-labels" aria-pressed="true">Labels</button>
