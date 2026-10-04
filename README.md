@@ -2,7 +2,7 @@
 
 > Food waste in landfill makes methane. Feed the Egg captures it and turns it into power, cooking gas and soil, with one shared Egg per street.
 
-**Mobile app design:** [open in Figma](https://www.figma.com/make/3GSdU9DUUUgMmTY3kltKxt/EggCycle-Mobile-App-Design?t=JnbTwmoYEWI3GMce-20&fullscreen=1)
+**Mobile app:** [try the prototype](https://thing-blend-46702836.figma.site/)
 
 ## Quick start (Windows)
 
