@@ -65,7 +65,13 @@ tracks = [
         "Our app: power made, biomethane left, digester health and days until soil.",
     ),
     (
-        "pages/7_Mobile_App.py",
+        "pages/7_3D_Model.py",
+        "model_3d.png",
+        "3D Model",
+        "The Egg, its sensors and power unit. Press X-ray to see inside.",
+    ),
+    (
+        "pages/8_Mobile_App.py",
         "mobile_app.png",
         "Mobile App",
         "Scan the Egg and see food waste, methane and electricity on your phone.",

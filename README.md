@@ -27,7 +27,8 @@ Or in VS Code: **Terminal → Run Task → Setup venv**, then **F5 → Fetch dat
 | 4 | Green Industrialization | `app/pages/4_Green_Industrialization.py` | OWID CO₂: by source, CO₂/GDP |
 | 5 | Awareness | `app/pages/5_Awareness.py` | Facts pulled from all of the above |
 | 6 | Feed the Egg | `app/pages/6_Feed_the_Egg.py` | Egg sensor readings (`python -m climate.ingest --fake` for demo data) |
-| 7 | Mobile App | `app/pages/7_Mobile_App.py` | Published phone prototype |
+| 7 | 3D Model | `app/pages/7_3D_Model.py` | `figures/eggcycle-3d.html` |
+| 8 | Mobile App | `app/pages/8_Mobile_App.py` | Published phone prototype |
 
 See [docs/themes.md](docs/themes.md) for questions, extra datasets and project ideas per track.
 

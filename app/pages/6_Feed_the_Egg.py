@@ -1,7 +1,6 @@
 """Feed the Egg: companion app for the egg-shaped home food-waste digester."""
 
 from datetime import date, timedelta
-from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
@@ -18,8 +17,6 @@ from climate.digester import (
     soil_timeline,
 )
 from climate.ingest import LEAK_ALARM_PPM, feed_log, load_readings
-
-MODEL_3D = Path(__file__).resolve().parents[2] / "figures" / "eggcycle-3d.html"
 
 st.set_page_config(page_title="Feed the Egg", layout="centered")
 st.title("Feed the Egg")
@@ -41,11 +38,9 @@ banner(
     ],
 )
 
-st.subheader("The Egg in 3D")
-st.caption("Drag to rotate, scroll to zoom. Press X-ray to see the slurry and gas dome inside.")
-st.iframe(MODEL_3D, height=560)
-
-st.page_link("pages/7_Mobile_App.py", label="Try the Feed the Egg mobile app")
+left, right = st.columns(2)
+left.page_link("pages/7_3D_Model.py", label="See the Egg in 3D")
+right.page_link("pages/8_Mobile_App.py", label="Try the mobile app")
 
 # --- Settings -------------------------------------------------------------------------------
 readings = load_readings()
