@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+# data/raw is committed so the app runs on Streamlit Cloud without a fetch step
+data/processed/*
+!data/**/.gitkeep
+hardware/esp32/**/secrets.h

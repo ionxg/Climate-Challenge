@@ -1,0 +1,13 @@
+# data
+pandas>=2.2
+numpy>=2.0
+requests>=2.32
+python-dotenv>=1.0
+# viz + demo app
+matplotlib>=3.9
+plotly>=5.24
+streamlit>=1.39
+# notebooks + dev
+jupyter
+pytest>=8.3
+ruff>=0.7

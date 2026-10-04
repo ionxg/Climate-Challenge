@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EggCycle Home Designs</title>
+<style>
+  :root {
+    --bg: #f6f4ef; --panel: #ffffffd9; --text: #23211d; --muted: #6b665c;
+    --line: #d9d3c6; --accent: #3f8f4f; --label-bg: #ffffffe6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17181a; --panel: #23252ad9; --text: #ecebe7; --muted: #a29f97;
+      --line: #3a3c41; --accent: #6cc27c; --label-bg: #23252ae6;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17181a; --panel: #23252ad9; --text: #ecebe7; --muted: #a29f97;
+    --line: #3a3c41; --accent: #6cc27c; --label-bg: #23252ae6;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--text); overflow: hidden;
+    font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  #stage { position: fixed; inset: 0; touch-action: none; cursor: grab; }
+  #stage:active { cursor: grabbing; }
+  header {
+    position: fixed; top: 16px; left: 16px; right: 16px; pointer-events: none;
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+  }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; backdrop-filter: blur(6px); pointer-events: auto; max-width: 360px;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .card p { margin: 0; color: var(--muted); }
+  .specs { margin: 8px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 13px; }
+  .specs b { color: var(--text); font-weight: 600; }
+  .side { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+  .controls { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .models {
+    display: flex; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 999px; padding: 3px; pointer-events: auto;
+  }
+  .models button { border: 0; background: transparent; }
+  button {
+    font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line);
+    border-radius: 999px; padding: 6px 12px; cursor: pointer; pointer-events: auto;
+  }
+  button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  #labels { position: fixed; inset: 0; pointer-events: none; }
+  .label {
+    position: absolute; transform: translate(10px, -50%); white-space: nowrap;
+    background: var(--label-bg); border: 1px solid var(--line); border-radius: 8px;
+    padding: 3px 8px; font-size: 12.5px; transition: opacity .15s;
+  }
+  .label::before {
+    content: ""; position: absolute; left: -14px; top: 50%; width: 8px; height: 8px;
+    margin-top: -4px; border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 0 2px var(--bg);
+  }
+  .label small { display: block; color: var(--muted); font-size: 11px; }
+  .hint {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    color: var(--muted); font-size: 12px; pointer-events: none; text-align: center;
+  }
+  @media (max-width: 640px) {
+    header { flex-direction: column; }
+    .card { max-width: none; width: 100%; }
+    .specs { display: none; }
+    .side { align-items: flex-start; }
+    .controls { justify-content: flex-start; }
+    .label { font-size: 11px; }
+    .label small { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="labels"></div>
+<header>
+  <div class="card">
+    <h1 id="title">EggCycle</h1>
+    <p id="subtitle"></p>
+    <ul class="specs" id="specs"></ul>
+  </div>
+  <div class="side">
+    <div class="models" role="group" aria-label="Home Egg design">
+      <button data-model="classic" aria-pressed="true">Classic</button>
+      <button data-model="cracked" aria-pressed="false">Cracked Top</button>
+      <button data-model="lying" aria-pressed="false">Lying Egg</button>
+    </div>
+    <div class="controls">
+      <button id="btn-xray" aria-pressed="false">X-ray</button>
+      <button id="btn-labels" aria-pressed="true">Labels</button>
+      <button id="btn-spin" aria-pressed="true">Spin</button>
+      <button id="btn-reset">Reset view</button>
+    </div>
+  </div>
+</header>
+<div class="hint">Drag to rotate · scroll or pinch to zoom</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  const stage = document.getElementById('stage');
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.localClippingEnabled = true;
+  stage.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(35, 1, 0.05, 80);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a7f6a, 0.75));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.85);
+  sun.position.set(3, 6, 4);
+  scene.add(sun);
+
+  // ---- Materials --------------------------------------------------------------------------
+  const mat = (color, extra = {}) =>
+    new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.05, ...extra });
+  const M = {
+    shell: mat(0xf1e8d5, { roughness: 0.4, transparent: true }),
+    shellDS: mat(0xf1e8d5, { roughness: 0.4, transparent: true, side: THREE.DoubleSide }),
+    plate: mat(0xe2d6bd, { side: THREE.DoubleSide }),
+    hole: mat(0x141414, { roughness: 0.9, side: THREE.DoubleSide }),
+    base: mat(0x7d8f74, { transparent: true }),
+    baseDark: mat(0x65775d, { transparent: true }),
+    wood: mat(0xa77a4f, { transparent: true }),
+    woodDark: mat(0x7d5835, { transparent: true }),
+    dark: mat(0x2b2d31),
+    metal: mat(0xa9adb3, { metalness: 0.6, roughness: 0.35 }),
+    red: mat(0xc8453a),
+    yellow: mat(0xe0b43c),
+    glow: mat(0x6cc27c, { emissive: 0x3f9f50, emissiveIntensity: 0.9 }),
+    screen: mat(0x1f3d2a, { emissive: 0x2f7d45, emissiveIntensity: 0.7 }),
+    slurry: mat(0x6b4f2e, { transparent: true, opacity: 0.9 }),
+    // Lying egg: slurry cut off at a level surface (keeps y <= 0.69)
+    slurryLying: mat(0x6b4f2e, { transparent: true, opacity: 0.9, side: THREE.DoubleSide,
+      clippingPlanes: [new THREE.Plane(new THREE.Vector3(0, -1, 0), 0.69)] }),
+    gas: mat(0xf3df87, { transparent: true, opacity: 0.35, depthWrite: false }),
+    bag: mat(0xf0cf5a, { transparent: true, opacity: 0.6 }),
+    battery: mat(0x2f5d8a),
+    gen: mat(0x5d6168),
+  };
+
+  const add = (parent, geo, material, pos = [0, 0, 0], rot = [0, 0, 0]) => {
+    const m = new THREE.Mesh(geo, material);
+    m.position.set(...pos);
+    m.rotation.set(...rot);
+    parent.add(m);
+    return m;
+  };
+  const tube = (parent, pts, r, material) =>
+    add(parent, new THREE.TubeGeometry(
+      new THREE.CatmullRomCurve3(pts.map(p => new THREE.Vector3(...p))), 48, r, 12), material);
+  const box = (parent, [w, h, d], material, pos, rot) => add(parent, new THREE.BoxGeometry(w, h, d), material, pos, rot);
+  const cyl = (parent, r1, r2, h, material, pos, rot, seg = 32) =>
+    add(parent, new THREE.CylinderGeometry(r1, r2, h, seg), material, pos, rot);
+
+  // Smell control: a charcoal filter cartridge on the inlet, and a pH probe into the slurry.
+  const charcoalVent = (parent, pos) => {
+    cyl(parent, 0.024, 0.024, 0.08, M.dark, pos);
+    cyl(parent, 0.03, 0.03, 0.012, M.metal, [pos[0], pos[1] + 0.045, pos[2]]);
+  };
+  const phProbe = (parent, outside, inside) => {
+    tube(parent, [outside, inside], 0.006, M.metal);
+    add(parent, new THREE.SphereGeometry(0.022, 16, 12), M.screen, outside);
+  };
+
+  // Egg made by spinning the same profile as hardware/eggcycle.scad.
+  function makeEgg(parent, { R, H, A = 0.12, YC, shell, fill = 0.3, slurry = M.slurry }) {
+    const eggR = t => R * Math.sqrt(Math.max(0, 1 - t * t)) * (1 - A * t);
+    const yAt = t => YC + H / 2 * t;
+    const pts = (scale = 1, tMax = 1) => {
+      const out = [];
+      for (let i = 0; i <= 64; i++) {
+        const t = -1 + (tMax + 1) * i / 64;
+        out.push(new THREE.Vector2(eggR(t) * scale, YC + H / 2 * t * scale));
+      }
+      if (tMax < 1) out.push(new THREE.Vector2(0, YC + H / 2 * tMax * scale));
+      return out;
+    };
+    add(parent, new THREE.LatheGeometry(pts(), 96), shell);
+    add(parent, new THREE.TorusGeometry(eggR(0) + 0.004 * R / 0.3, 0.008 * R / 0.3, 12, 96), M.glow, [0, YC, 0], [Math.PI / 2, 0, 0]);
+    const inside = new THREE.Group();
+    parent.add(inside);
+    add(inside, new THREE.LatheGeometry(pts(0.96, fill), 96), slurry);
+    add(inside, new THREE.LatheGeometry(pts(0.95), 96), M.gas);
+    return { eggR, yAt, inside };
+  }
+
+  // ---- Design 1: Classic Egg (same as eggcycle-3d.html) ---------------------------------------
+  function buildHome(g) {
+    const { eggR, yAt, inside } = makeEgg(g, { R: 0.30, H: 0.90, YC: 1.01, shell: M.shell });
+    cyl(g, 0.40, 0.42, 0.50, M.base, [0, 0.25, 0], [0, 0, 0], 72);
+    const pod = new THREE.Group();
+    g.add(pod);
+    add(pod, new THREE.SphereGeometry(1, 40, 20), M.bag, [0, 0.33, -0.04]).scale.set(0.33, 0.12, 0.30);
+    box(pod, [0.30, 0.13, 0.16], M.battery, [0, 0.09, 0.18]);
+
+    const panelZ = 0.405;
+    box(g, [0.34, 0.17, 0.04], M.dark, [0, 0.27, panelZ - 0.01]);
+    for (const x of [-0.1, 0.0]) cyl(g, 0.035, 0.035, 0.012, M.metal, [x, 0.27, panelZ + 0.012], [Math.PI / 2, 0, 0]);
+    for (const y of [0.295, 0.245]) box(g, [0.035, 0.013, 0.012], M.metal, [0.11, y, panelZ + 0.012]);
+    box(g, [0.2, 0.06, 0.02], M.screen, [0, 0.41, panelZ - 0.005]);
+    box(g, [0.06, 0.12, 0.09], M.dark, [0.42, 0.36, 0.05]);
+
+    const ringY = yAt(-0.8), ringR = eggR(-0.8) + 0.01;
+    add(g, new THREE.TorusGeometry(ringR, 0.018, 12, 64), M.metal, [0, ringY, 0], [Math.PI / 2, 0, 0]);
+    for (let i = 0; i < 3; i++) {
+      const a = i * 2 * Math.PI / 3 + Math.PI / 2;
+      tube(g, [[Math.cos(a) * ringR, ringY, Math.sin(a) * ringR], [Math.cos(a) * (ringR + 0.05), 0.5, Math.sin(a) * (ringR + 0.05)]], 0.014, M.metal);
+    }
+
+    const inY = yAt(0.45), inR = eggR(0.45);
+    const inlet = new THREE.Group();
+    inlet.position.set(0, inY, inR - 0.02);
+    inlet.rotation.x = Math.PI / 4;
+    g.add(inlet);
+    cyl(inlet, 0.06, 0.06, 0.16, M.metal, [0, 0.08, 0]);
+    add(inlet, new THREE.CylinderGeometry(0.13, 0.065, 0.11, 40, 1, true), M.shell, [0, 0.21, 0]);
+    cyl(inlet, 0.135, 0.135, 0.015, M.base, [0, 0.27, -0.03], [-0.35, 0, 0], 40);
+    add(inlet, new THREE.TorusGeometry(0.128, 0.008, 8, 40), M.dark, [0, 0.262, 0], [Math.PI / 2, 0, 0]);  // rubber seal
+    charcoalVent(inlet, [0.13, 0.2, 0]);
+    phProbe(g, [eggR(-0.3) + 0.05, yAt(-0.3), 0.06], [eggR(-0.3) - 0.14, yAt(-0.36), 0.03]);
+
+    const topY = yAt(1);
+    cyl(g, 0.03, 0.04, 0.05, M.metal, [0, topY + 0.015, 0]);
+    box(g, [0.09, 0.012, 0.02], M.red, [0, topY + 0.05, 0]);
+    cyl(g, 0.022, 0.022, 0.02, M.yellow, [0.05, topY + 0.03, 0]);
+    tube(g, [[0, topY + 0.04, -0.02], [0, topY + 0.06, -0.12], [0, yAt(0.4), -0.33], [0, yAt(-0.2), -0.36], [0, 0.8, -0.36]], 0.012, M.metal);
+    cyl(g, 0.05, 0.05, 0.26, M.yellow, [0, 0.64, -0.36]);
+
+    const botY = yAt(-1);
+    tube(g, [[0, botY + 0.01, 0], [0, botY - 0.02, 0.06], [0, 0.535, 0.2], [0, 0.535, 0.45]], 0.018, M.metal);
+    box(g, [0.1, 0.012, 0.02], M.red, [0, 0.57, 0.46]);
+    cyl(g, 0.016, 0.016, 0.07, M.metal, [0, 0.5, 0.475]);
+
+    box(g, [0.46, 0.40, 0.34], M.gen, [0, 0.2, -0.6]);
+    cyl(g, 0.025, 0.025, 0.35, M.dark, [0.17, 0.57, -0.7]);
+
+    return {
+      title: 'Classic Egg',
+      subtitle: 'Upright egg on a base pod: scraps in, power at the plug, soil out.',
+      specs: ['<b>Size:</b> egg 90 × 60 cm (~170 L), ~1.55 m tall overall',
+              '<b>Makes:</b> ~0.25 kWh/day from ~1 kg scraps',
+              '<b>Cost:</b> ~US$900–1,400 (prototype)'],
+      target: [0, 0.72, 0], dist: 3.6, az: 0.6, xrayMats: [M.shell, M.base], insides: [inside, pod],
+      labels: [
+        ['Self-closing hopper lid', 'rubber seal · load cell weighs feeds', [0, inY + 0.2, inR + 0.17]],
+        ['Charcoal filter vent', 'any air pushed out is filtered', [0.15, inY + 0.06, inR + 0.12]],
+        ['pH probe', 'warns before it turns sour', [eggR(-0.3) + 0.07, yAt(-0.3), 0.06]],
+        ['Gas valve + relief valve', 'vents safely if over-pressure', [0.05, topY + 0.05, 0]],
+        ['H₂S filter', 'removes toxic gas', [0, 0.64, -0.41]],
+        ['Power plug + display', '2× AC + 2× USB', [0.15, 0.27, panelZ + 0.02]],
+        ['Digestate tap', 'drain → cure 14 days → soil', [0, 0.5, 0.5]],
+        ['Biogas generator', 'charges the battery', [0.23, 0.3, -0.6]],
+        ['ESP32 sensor hub', 'Wi-Fi to the app', [0.45, 0.4, 0.05]],
+        ['Slurry ~115 L', '21 days at 30–35 °C', [eggR(-0.3) * 0.6, yAt(-0.3), eggR(-0.3) * 0.6], true],
+        ['150 L gas bag', 'level read by a sensor', [-0.22, 0.36, 0.05], true],
+        ['Battery + inverter', 'feeds the plug', [0.12, 0.09, 0.26], true],
+      ],
+    };
+  }
+
+  // ---- Design 2: Cracked Top Egg in a nest --------------------------------------------------
+  function buildCracked(g) {
+    const YC = 0.87, CUT = 0.55;  // the top cracks open above t = CUT
+    const R = 0.30, H = 0.90, A = 0.12;
+    const eggR = t => R * Math.sqrt(Math.max(0, 1 - t * t)) * (1 - A * t);
+    const yAt = t => YC + H / 2 * t;
+    const profile = (t0, t1, scale = 1) => {
+      const out = [];
+      for (let i = 0; i <= 48; i++) {
+        const t = t0 + (t1 - t0) * i / 48;
+        out.push(new THREE.Vector2(eggR(t) * scale, YC + H / 2 * t * scale));
+      }
+      return out;
+    };
+    const rimY = yAt(CUT), rimR = eggR(CUT);
+
+    // body (open at the crack, so you can see in) + status band + "face" display
+    add(g, new THREE.LatheGeometry(profile(-1, CUT), 96), M.shellDS);
+    add(g, new THREE.TorusGeometry(eggR(0) + 0.004, 0.008, 12, 96), M.glow, [0, YC, 0], [Math.PI / 2, 0, 0]);
+    const faceT = 0.18;
+    box(g, [0.17, 0.09, 0.012], M.screen, [0, yAt(faceT), eggR(faceT) - 0.004], [-0.12, 0, 0]);
+
+    // zigzag crack line around the rim
+    const crack = [];
+    for (let i = 0; i < 36; i++) {
+      const a = i / 36 * Math.PI * 2;
+      crack.push(new THREE.Vector3(Math.cos(a) * (rimR + 0.002), rimY + (i % 2 ? 0.025 : -0.015), Math.sin(a) * (rimR + 0.002)));
+    }
+    add(g, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(crack, true, 'catmullrom', 0.1), 144, 0.005, 6, true), M.dark);
+
+    // food hole: a plate inside the rim, a dark opening and a funnel going down
+    add(g, new THREE.RingGeometry(0.13, rimR - 0.004, 48), M.plate, [0, rimY - 0.02, 0], [-Math.PI / 2, 0, 0]);
+    add(g, new THREE.CircleGeometry(0.13, 48), M.hole, [0, rimY - 0.021, 0], [-Math.PI / 2, 0, 0]);
+    add(g, new THREE.CylinderGeometry(0.13, 0.06, 0.3, 32, 1, true), M.hole, [0, rimY - 0.17, 0]);
+
+    // cracked cap, hinged at the back and flipped open
+    const hinge = new THREE.Group();
+    hinge.position.set(0, rimY, -rimR);
+    hinge.rotation.x = -1.15;
+    g.add(hinge);
+    add(hinge, new THREE.LatheGeometry(profile(CUT, 1), 96), M.shellDS, [0, -rimY, rimR]);
+    const capCrack = crack.map(p => new THREE.Vector3(p.x, p.y - rimY + 0.012, p.z + rimR));
+    add(hinge, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(capCrack, true, 'catmullrom', 0.1), 144, 0.005, 6, true), M.dark);
+    box(g, [0.08, 0.03, 0.03], M.metal, [0, rimY, -rimR - 0.01]);  // hinge
+    add(g, new THREE.TorusGeometry(rimR - 0.012, 0.009, 8, 64), M.dark, [0, rimY - 0.005, 0], [Math.PI / 2, 0, 0]);  // rubber seal
+    charcoalVent(g, [eggR(CUT - 0.14) + 0.02, rimY - 0.09, 0.06]);
+    phProbe(g, [-eggR(-0.3) - 0.05, yAt(-0.3), 0.06], [-eggR(-0.3) + 0.14, yAt(-0.36), 0.03]);
+
+    // nest base: woven rings around a round pod
+    cyl(g, 0.40, 0.43, 0.5, M.wood, [0, 0.25, 0], [0, 0, 0], 64);
+    for (const y of [0.08, 0.19, 0.30, 0.41]) add(g, new THREE.TorusGeometry(0.425, 0.028, 10, 64), M.woodDark, [0, y, 0], [Math.PI / 2, 0, 0]);
+    add(g, new THREE.TorusGeometry(0.37, 0.07, 14, 64), M.woodDark, [0, 0.5, 0], [Math.PI / 2, 0, 0]);
+    const nest = new THREE.Group();
+    g.add(nest);
+    add(nest, new THREE.SphereGeometry(1, 40, 20), M.bag, [0, 0.26, -0.05]).scale.set(0.3, 0.12, 0.26);
+    box(nest, [0.28, 0.12, 0.14], M.battery, [0, 0.09, 0.2]);
+
+    // plug panel on the nest, digestate tap beside it
+    box(g, [0.26, 0.14, 0.04], M.dark, [0.1, 0.25, 0.45]);
+    for (const x of [0.03, 0.11]) cyl(g, 0.03, 0.03, 0.012, M.metal, [x, 0.25, 0.474], [Math.PI / 2, 0, 0]);
+    box(g, [0.03, 0.012, 0.012], M.metal, [0.185, 0.27, 0.474]);
+    box(g, [0.03, 0.012, 0.012], M.metal, [0.185, 0.23, 0.474]);
+    tube(g, [[0, yAt(-1) + 0.02, 0], [-0.1, 0.3, 0.2], [-0.24, 0.16, 0.44], [-0.24, 0.16, 0.5]], 0.018, M.metal);
+    box(g, [0.09, 0.012, 0.02], M.red, [-0.24, 0.195, 0.5]);
+    cyl(g, 0.015, 0.015, 0.06, M.metal, [-0.24, 0.12, 0.51]);
+
+    // gas out of the shoulder → relief valve → H2S filter → generator
+    const gT = 0.4;
+    tube(g, [[0, yAt(gT), -eggR(gT) + 0.01], [0, yAt(gT) + 0.02, -eggR(gT) - 0.08], [0, yAt(0.1), -0.43], [0, 0.62, -0.5]], 0.012, M.metal);
+    cyl(g, 0.02, 0.02, 0.03, M.yellow, [0, yAt(gT) + 0.04, -eggR(gT) - 0.08]);
+    cyl(g, 0.05, 0.05, 0.24, M.yellow, [0, 0.5, -0.5]);
+    box(g, [0.42, 0.36, 0.3], M.gen, [0.52, 0.18, -0.42]);
+    cyl(g, 0.022, 0.022, 0.3, M.dark, [0.66, 0.5, -0.5]);
+    tube(g, [[0, 0.38, -0.5], [0.15, 0.25, -0.5], [0.31, 0.25, -0.45]], 0.01, M.metal);
+
+    const inside = new THREE.Group();
+    g.add(inside);
+    add(inside, new THREE.LatheGeometry([...profile(-1, 0.2, 0.96), new THREE.Vector2(0, YC + H / 2 * 0.2 * 0.96)], 96), M.slurry);
+    add(inside, new THREE.CylinderGeometry(0.06, 0.06, 0.32, 24), M.hole, [0, yAt(0.08), 0]);  // inlet pipe dips into the slurry
+
+    return {
+      title: 'Cracked Top Egg',
+      subtitle: 'The top flips open like a cracked egg to drop scraps in. It sits in a woven nest.',
+      specs: ['<b>Size:</b> same 170 L egg, ~1.35 m tall with the top closed',
+              '<b>Inlet:</b> a funnel that dips below the slurry, so gas can’t escape',
+              '<b>Display:</b> on the egg’s “face”; nest hides battery + gas bag'],
+      target: [0, 0.68, 0], dist: 3.6, az: 0.55, el: 0.5, xrayMats: [M.shellDS, M.wood, M.woodDark], insides: [inside, nest],
+      labels: [
+        ['Cracked top lid', 'spring hinge closes it · rubber seal', [0, rimY + 0.35, -rimR - 0.05]],
+        ['Charcoal filter vent', 'any air pushed out is filtered', [eggR(CUT - 0.14) + 0.04, rimY - 0.07, 0.06]],
+        ['pH probe', 'warns before it turns sour', [-eggR(-0.3) - 0.07, yAt(-0.3), 0.06]],
+        ['Food hole', 'drop scraps straight in', [0.05, rimY - 0.01, 0.06]],
+        ['Display “face”', 'kWh made · days to soil', [0.09, yAt(faceT), eggR(faceT)]],
+        ['Woven nest base', 'hides battery + gas bag', [0.36, 0.42, 0.25]],
+        ['Power plug', '2× AC + 2× USB', [0.22, 0.25, 0.47]],
+        ['Digestate tap', 'drain → cure 14 days → soil', [-0.24, 0.12, 0.52]],
+        ['Gas out + relief valve', 'from the shoulder, behind', [0, yAt(gT) + 0.05, -eggR(gT) - 0.08]],
+        ['H₂S filter', 'removes toxic gas', [0, 0.5, -0.55]],
+        ['Biogas generator', 'charges the battery', [0.73, 0.25, -0.42]],
+        ['Water seal', 'inlet pipe ends under the slurry', [0.06, yAt(-0.08), 0.06], true],
+        ['Slurry ~115 L', '21 days at 30–35 °C', [eggR(-0.55) * 0.6, yAt(-0.55), eggR(-0.55) * 0.6], true],
+        ['150 L gas bag', 'inside the nest', [-0.22, 0.27, 0.05], true],
+      ],
+    };
+  }
+
+  // ---- Design 3: Lying Egg on a cradle --------------------------------------------------------
+  function buildLying(g) {
+    const CY = 0.62;  // height of the egg's axis
+    const R = 0.30, A = 0.12;
+    const eggR = t => R * Math.sqrt(Math.max(0, 1 - t * t)) * (1 - A * t);
+    const xAt = t => 0.45 * t;  // the egg lies along x: wide end left, narrow end right
+    const topAt = t => CY + eggR(t);
+
+    // the egg, rotated onto its side
+    const body = new THREE.Group();
+    body.position.set(0, CY, 0);
+    body.rotation.z = -Math.PI / 2;
+    g.add(body);
+    const { inside } = makeEgg(body, { R, H: 0.9, YC: 0, shell: M.shell, fill: 0.999, slurry: M.slurryLying });
+
+    // cradle: plinth with drawers + two curved saddles
+    box(g, [1.0, 0.3, 0.56], M.base, [0, 0.15, 0]);
+    box(g, [0.46, 0.2, 0.01], M.baseDark, [-0.24, 0.15, 0.281]);
+    box(g, [0.1, 0.02, 0.02], M.metal, [-0.24, 0.2, 0.29]);
+    for (const t of [-0.5, 0.5]) {
+      add(g, new THREE.TorusGeometry(eggR(t) + 0.02, 0.03, 10, 40, Math.PI), M.wood, [xAt(t), CY, 0], [0, Math.PI / 2, Math.PI]);
+      box(g, [0.06, 0.04, 0.5], M.wood, [xAt(t), 0.32, 0]);
+    }
+
+    // inlet hatch on top, lid open
+    const hT = 0.12, hx = xAt(hT), hy = topAt(hT);
+    cyl(g, 0.12, 0.12, 0.07, M.metal, [hx, hy + 0.01, 0], [0, 0, 0], 40);
+    add(g, new THREE.CircleGeometry(0.1, 40), M.hole, [hx, hy + 0.047, 0], [-Math.PI / 2, 0, 0]);
+    add(g, new THREE.TorusGeometry(0.105, 0.012, 10, 40), M.dark, [hx, hy + 0.047, 0], [Math.PI / 2, 0, 0]);
+    const lid = new THREE.Group();
+    lid.position.set(hx, hy + 0.05, -0.12);
+    lid.rotation.x = -1.95;
+    g.add(lid);
+    cyl(lid, 0.13, 0.13, 0.02, M.base, [0, 0, 0.12], [0, 0, 0], 40);
+    box(lid, [0.08, 0.03, 0.02], M.dark, [0, 0.02, 0.24]);
+    charcoalVent(g, [hx + 0.17, topAt((hx + 0.17) / 0.45) + 0.02, 0.06]);
+    phProbe(g, [xAt(0.3), CY - 0.05, eggR(0.3) + 0.05], [xAt(0.3), CY - 0.1, eggR(0.3) - 0.14]);
+
+    // gas valve + relief valve on the top ridge, pipe to H2S filter at the back
+    const gT = -0.35, gx = xAt(gT), gy = topAt(gT);
+    cyl(g, 0.025, 0.035, 0.05, M.metal, [gx, gy + 0.015, 0]);
+    box(g, [0.02, 0.012, 0.09], M.red, [gx, gy + 0.05, 0]);
+    cyl(g, 0.018, 0.018, 0.04, M.yellow, [gx - 0.06, gy + 0.01, 0]);
+    tube(g, [[gx, gy + 0.04, -0.02], [gx, gy + 0.05, -0.15], [gx - 0.05, CY, -0.33], [gx - 0.1, 0.48, -0.33]], 0.012, M.metal);
+    cyl(g, 0.05, 0.05, 0.22, M.yellow, [gx - 0.1, 0.4, -0.33]);
+
+    // status band is the egg's middle ring; display + plug panel on the plinth front
+    box(g, [0.2, 0.07, 0.012], M.screen, [0.16, 0.22, 0.283]);
+    box(g, [0.24, 0.06, 0.03], M.dark, [0.16, 0.11, 0.285]);
+    for (const x of [0.09, 0.16]) cyl(g, 0.022, 0.022, 0.012, M.metal, [x, 0.11, 0.303], [Math.PI / 2, 0, 0]);
+    box(g, [0.03, 0.01, 0.012], M.metal, [0.23, 0.11, 0.303]);
+
+    // digestate tap out of the narrow end
+    tube(g, [[xAt(0.75), CY - eggR(0.75) + 0.03, 0], [0.42, 0.4, 0], [0.56, 0.36, 0]], 0.018, M.metal);
+    box(g, [0.02, 0.012, 0.09], M.red, [0.56, 0.4, 0]);
+    cyl(g, 0.015, 0.015, 0.07, M.metal, [0.58, 0.32, 0]);
+
+    // generator box at the wide end
+    box(g, [0.36, 0.42, 0.42], M.gen, [-0.72, 0.21, -0.02]);
+    cyl(g, 0.022, 0.022, 0.32, M.dark, [-0.82, 0.58, -0.15]);
+    tube(g, [[gx - 0.1, 0.3, -0.33], [-0.4, 0.25, -0.3], [-0.54, 0.25, -0.2]], 0.01, M.metal);
+
+    const drawer = new THREE.Group();
+    g.add(drawer);
+    add(drawer, new THREE.SphereGeometry(1, 40, 20), M.bag, [-0.2, 0.16, 0]).scale.set(0.27, 0.1, 0.24);
+    box(drawer, [0.26, 0.13, 0.2], M.battery, [0.26, 0.1, -0.05]);
+
+    return {
+      title: 'Lying Egg',
+      subtitle: 'The egg lies on its side on a cradle: low, stable, and the hatch is at waist height.',
+      specs: ['<b>Size:</b> same 170 L egg, only ~95 cm tall, 1 m long',
+              '<b>Fits:</b> under a window, on a deck or along a wall',
+              '<b>Inlet:</b> round hatch on top, easy for kids to reach'],
+      target: [0, 0.45, 0], dist: 3.4, az: 0.5, el: 0.5, xrayMats: [M.shell, M.base, M.baseDark], insides: [inside, drawer],
+      labels: [
+        ['Food hatch', 'self-closing lid · rubber seal', [hx, hy + 0.06, 0.04]],
+        ['Charcoal filter vent', 'any air pushed out is filtered', [hx + 0.19, topAt((hx + 0.17) / 0.45) + 0.06, 0.06]],
+        ['pH probe', 'warns before it turns sour', [xAt(0.3), CY - 0.05, eggR(0.3) + 0.07]],
+        ['Gas valve + relief valve', 'on the top ridge', [gx, gy + 0.06, 0]],
+        ['H₂S filter', 'removes toxic gas', [gx - 0.1, 0.42, -0.38]],
+        ['Wooden cradle', 'holds the egg steady', [xAt(0.5), 0.36, 0.26]],
+        ['Display + power plug', 'kWh made · 2× AC + USB', [0.29, 0.17, 0.3]],
+        ['Storage drawer', 'gas bag + battery inside', [-0.24, 0.15, 0.3]],
+        ['Digestate tap', 'drain → cure 14 days → soil', [0.58, 0.32, 0.03]],
+        ['Biogas generator', 'charges the battery', [-0.54, 0.3, 0.2]],
+        ['Slurry ~115 L', 'stays level as the egg lies flat', [0.05, 0.5, 0.18], true],
+        ['Gas space', 'biogas collects along the top', [-0.15, 0.82, 0.05], true],
+        ['150 L gas bag', 'in the drawer', [-0.4, 0.24, 0.05], true],
+      ],
+    };
+  }
+
+  // ---- Build all three --------------------------------------------------------------------
+  const labelLayer = document.getElementById('labels');
+  const models = {};
+  for (const [key, build] of Object.entries({ classic: buildHome, cracked: buildCracked, lying: buildLying })) {
+    const group = new THREE.Group();
+    scene.add(group);
+    const spec = build(group);
+    spec.group = group;
+    spec.labels = spec.labels.map(([title, sub, p, xrayOnly]) => {
+      const el = document.createElement('div');
+      el.className = 'label';
+      el.innerHTML = `${title}<small>${sub}</small>`;
+      labelLayer.appendChild(el);
+      return { el, pos: new THREE.Vector3(...p), xrayOnly: !!xrayOnly };
+    });
+    models[key] = spec;
+  }
+  const shadow = add(scene, new THREE.CircleGeometry(1, 64), new THREE.MeshBasicMaterial({
+    color: 0x000000, transparent: true, opacity: 0.06, depthWrite: false }), [0, -0.005, 0], [-Math.PI / 2, 0, 0]);
+
+  // ---- State + controls ----------------------------------------------------------------
+  const q = new URLSearchParams(location.search);
+  const state = { model: models[q.get('model')] ? q.get('model') : 'classic', xray: false, labels: true, spin: true };
+  const view = { az: 0.6, el: 0.28, dist: 3.6 };
+  const target = new THREE.Vector3();
+  const current = () => models[state.model];
+
+  function applyXray() {
+    for (const m of Object.values(models)) {
+      for (const mt of m.xrayMats) { mt.opacity = 1; mt.depthWrite = true; }
+      for (const g of m.insides) g.visible = false;
+    }
+    const m = current();
+    for (const mt of m.xrayMats) { mt.opacity = state.xray ? 0.22 : 1; mt.depthWrite = !state.xray; }
+    for (const g of m.insides) g.visible = state.xray;
+  }
+  function resetView() {
+    const m = current();
+    Object.assign(view, { az: m.az, el: m.el || 0.28, dist: m.dist });
+    target.set(...m.target);
+  }
+  function selectModel(key) {
+    state.model = key;
+    for (const [k, m] of Object.entries(models)) m.group.visible = k === key;
+    for (const b of document.querySelectorAll('[data-model]')) b.setAttribute('aria-pressed', b.dataset.model === key);
+    const m = current();
+    document.getElementById('title').textContent = `EggCycle · ${m.title}`;
+    document.getElementById('subtitle').textContent = m.subtitle;
+    document.getElementById('specs').innerHTML = m.specs.map(s => `<li>${s}</li>`).join('');
+    shadow.scale.setScalar(m.dist * 0.4);
+    applyXray();
+    resetView();
+  }
+  function toggle(id, key, after) {
+    const btn = document.getElementById(id);
+    btn.addEventListener('click', () => {
+      state[key] = !state[key];
+      btn.setAttribute('aria-pressed', state[key]);
+      after && after();
+    });
+  }
+  toggle('btn-xray', 'xray', applyXray);
+  toggle('btn-labels', 'labels');
+  toggle('btn-spin', 'spin');
+  document.getElementById('btn-reset').addEventListener('click', resetView);
+  for (const b of document.querySelectorAll('[data-model]')) b.addEventListener('click', () => selectModel(b.dataset.model));
+
+  // URL options for screenshots/slides, e.g. ?model=lying&xray=1&spin=0&az=0.4
+  for (const key of ['xray', 'labels', 'spin']) {
+    if (q.has(key)) {
+      state[key] = q.get(key) === '1';
+      document.getElementById(`btn-${key}`).setAttribute('aria-pressed', state[key]);
+    }
+  }
+  selectModel(state.model);
+  if (q.has('az')) view.az = Number(q.get('az'));
+
+  const pointers = new Map();
+  let pinchStart = 0;
+  const clampDist = d => Math.max(current().dist * 0.45, Math.min(current().dist * 2, d));
+  function stopSpin() {
+    state.spin = false;
+    document.getElementById('btn-spin').setAttribute('aria-pressed', 'false');
+  }
+  stage.addEventListener('pointerdown', e => {
+    stage.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      pinchStart = Math.hypot(a[0] - b[0], a[1] - b[1]) * view.dist;
+    }
+    stopSpin();
+  });
+  stage.addEventListener('pointermove', e => {
+    if (!pointers.has(e.pointerId)) return;
+    const [px, py] = pointers.get(e.pointerId);
+    pointers.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      view.dist = clampDist(pinchStart / Math.max(1, Math.hypot(a[0] - b[0], a[1] - b[1])));
+    } else {
+      view.az -= (e.clientX - px) * 0.008;
+      view.el = Math.max(-0.2, Math.min(1.3, view.el + (e.clientY - py) * 0.006));
+    }
+  });
+  const release = e => pointers.delete(e.pointerId);
+  stage.addEventListener('pointerup', release);
+  stage.addEventListener('pointercancel', release);
+  stage.addEventListener('wheel', e => {
+    e.preventDefault();
+    view.dist = clampDist(view.dist * Math.exp(e.deltaY * 0.001));
+  }, { passive: false });
+
+  function resize() {
+    const w = innerWidth, h = innerHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.fov = w < 640 ? 48 : 35;
+    camera.updateProjectionMatrix();
+  }
+  addEventListener('resize', resize);
+  resize();
+
+  const tmp = new THREE.Vector3(), camDir = new THREE.Vector3();
+  function frame() {
+    if (state.spin) view.az += 0.003;
+    camera.position.set(
+      target.x + view.dist * Math.cos(view.el) * Math.sin(view.az),
+      target.y + view.dist * Math.sin(view.el),
+      target.z + view.dist * Math.cos(view.el) * Math.cos(view.az));
+    camera.lookAt(target);
+    renderer.render(scene, camera);
+
+    camDir.subVectors(camera.position, target).setY(0).normalize();
+    for (const [k, m] of Object.entries(models)) {
+      for (const l of m.labels) {
+        const show = k === state.model && state.labels && (!l.xrayOnly || state.xray);
+        if (!show) { l.el.style.opacity = 0; continue; }
+        // Fade labels on the far side of the model.
+        const facing = tmp.set(l.pos.x - target.x, 0, l.pos.z - target.z).normalize().dot(camDir);
+        tmp.copy(l.pos).project(camera);
+        l.el.style.left = `${(tmp.x + 1) / 2 * innerWidth}px`;
+        l.el.style.top = `${(1 - tmp.y) / 2 * innerHeight}px`;
+        l.el.style.opacity = l.xrayOnly || facing > -0.15 ? 1 : 0.12;
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Setup venv",
+      "type": "shell",
+      "command": "python -m venv .venv; .venv/Scripts/python -m pip install -r requirements.txt"
+    },
+    {
+      "label": "Fetch data",
+      "type": "shell",
+      "command": ".venv/Scripts/python -m climate.fetch",
+      "options": { "env": { "PYTHONPATH": "src" } }
+    },
+    {
+      "label": "Run dashboard",
+      "type": "shell",
+      "command": ".venv/Scripts/streamlit run app/main.py"
+    },
+    {
+      "label": "Run tests",
+      "type": "shell",
+      "command": ".venv/Scripts/pytest",
+      "group": "test"
+    }
+  ]
+}
