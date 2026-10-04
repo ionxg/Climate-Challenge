@@ -20,6 +20,10 @@ from climate.digester import (
 from climate.ingest import LEAK_ALARM_PPM, feed_log, load_readings
 
 MODEL_3D = Path(__file__).resolve().parents[2] / "figures" / "eggcycle-3d.html"
+APP_DESIGN = (
+    "https://www.figma.com/make/3GSdU9DUUUgMmTY3kltKxt/EggCycle-Mobile-App-Design"
+    "?t=JnbTwmoYEWI3GMce-20&fullscreen=1"
+)
 
 st.set_page_config(page_title="Feed the Egg", layout="centered")
 st.title("Feed the Egg")
@@ -44,6 +48,13 @@ banner(
 st.subheader("The Egg in 3D")
 st.caption("Drag to rotate, scroll to zoom. Press X-ray to see the slurry and gas dome inside.")
 st.iframe(MODEL_3D, height=560)
+
+st.subheader("The mobile app")
+st.markdown(
+    "Scan the Egg with your phone to see how much food waste is inside, the methane it has "
+    "made and the electricity ready to use, then change its settings and learn what to feed it."
+)
+st.link_button("Open the app design in Figma", APP_DESIGN, type="primary")
 
 # --- Settings -------------------------------------------------------------------------------
 readings = load_readings()
