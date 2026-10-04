@@ -8,7 +8,7 @@ from climate.process import latest
 st.set_page_config(page_title="Climate Hackathon", layout="wide")
 st.title("Climate Hackathon")
 st.caption(
-    "Food waste in landfill makes methane. EggCycle captures it and turns it into power, "
+    "Food waste in landfill makes methane. Feed the Egg captures it and turns it into power, "
     "cooking gas and soil, with one shared Egg per street."
 )
 
@@ -26,7 +26,7 @@ for col, (label, df, field, unit) in zip(st.columns(len(kpis)), kpis, strict=Tru
     year, value = latest(df, country, field)
     col.metric(label, "n/a" if value is None else f"{value:,.2f}{unit}", help=f"Latest: {year}")
 
-st.subheader("How EggCycle fits each track")
+st.subheader("How Feed the Egg fits each track")
 tracks = [
     (
         "pages/1_Electrification.py",
@@ -59,9 +59,9 @@ tracks = [
         "Shows every household the kWh made and CO₂e saved by their scraps.",
     ),
     (
-        "pages/6_Egg_Digester.py",
+        "pages/6_Feed_the_Egg.py",
         "eggcycle.png",
-        "EggCycle",
+        "Feed the Egg",
         "Our app: power made, biomethane left, digester health and days until soil.",
     ),
 ]

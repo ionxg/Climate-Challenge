@@ -1,6 +1,6 @@
-# EggCycle
+# Feed the Egg
 
-> Food waste in landfill makes methane. EggCycle captures it and turns it into power, cooking gas and soil, with one shared Egg per street.
+> Food waste in landfill makes methane. Feed the Egg captures it and turns it into power, cooking gas and soil, with one shared Egg per street.
 
 ## Quick start (Windows)
 
@@ -24,7 +24,7 @@ Or in VS Code: **Terminal → Run Task → Setup venv**, then **F5 → Fetch dat
 | 3 | Resilient Cities & Buildings | `app/pages/3_Resilient_Cities.py` | Open-Meteo: heat and rain extremes |
 | 4 | Green Industrialization | `app/pages/4_Green_Industrialization.py` | OWID CO₂: by source, CO₂/GDP |
 | 5 | Awareness | `app/pages/5_Awareness.py` | Facts pulled from all of the above |
-| 6 | EggCycle | `app/pages/6_Egg_Digester.py` | Egg sensor readings (`python -m climate.ingest --fake` for demo data) |
+| 6 | Feed the Egg | `app/pages/6_Feed_the_Egg.py` | Egg sensor readings (`python -m climate.ingest --fake` for demo data) |
 
 See [docs/themes.md](docs/themes.md) for questions, extra datasets and project ideas per track.
 

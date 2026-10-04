@@ -1,4 +1,4 @@
-# EggCycle hardware
+# Feed the Egg hardware
 
 | File | What it is |
 |---|---|
@@ -12,7 +12,7 @@
  Sensors ──► ESP32 ──Wi-Fi──► laptop: python -m climate.ingest ──► data/raw/egg_readings.csv
                 │                                                         │
                 └─► relay ─► gas solenoid valve (closes on leak)          ▼
-                                                             EggCycle app (Streamlit, phone browser)
+                                                             Feed the Egg app (Streamlit, phone browser)
 ```
 
 ## Sensors and wiring (ESP32 DevKit v1)
@@ -59,7 +59,7 @@ For the hackathon demo you only need the electronics (about $60). Run
    ```
    Allow Python through Windows Firewall on private networks when asked.
 4. Flash the ESP32 and open Serial Monitor at 115200 baud. You should see `POST 200 {...}` every minute.
-5. Open the app (`streamlit run app/main.py` → **EggCycle**). It switches to **📡 Live** automatically.
+5. Open the app (`streamlit run app/main.py` → **Feed the Egg**). It switches to **Live data** automatically.
 
 ## Calibration (constants at the top of the `.ino`)
 - `SCALE_FACTOR`: put a known weight (e.g. 1 kg of water) in the hopper and adjust until it reads 1.00.

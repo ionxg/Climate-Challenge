@@ -25,11 +25,11 @@ def banner(image: str, credit: str, commons_file: str, links: list[tuple[str, st
 
 
 def egg_helps(points: list[str]) -> None:
-    """Box tying this track to EggCycle, for judges reading the page."""
+    """Box tying this track to Feed the Egg, for judges reading the page."""
     with st.container(border=True):
-        st.subheader("How EggCycle helps")
+        st.subheader("How Feed the Egg helps")
         st.markdown("\n".join(f"- {p}" for p in points))
-        st.page_link("pages/6_Egg_Digester.py", label="Open the EggCycle app")
+        st.page_link("pages/6_Feed_the_Egg.py", label="Open Feed the Egg")
 
 
 def _require(path: Path) -> None:

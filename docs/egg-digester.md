@@ -1,4 +1,4 @@
-# 🥚 EggCycle: egg-shaped home food-waste digester
+# Feed the Egg: egg-shaped home food-waste digester
 
 **Pitch:** Put your food scraps in the egg. Microbes turn them into biomethane, which powers a plug.
 After a few weeks, what's left becomes soil for your plants. The app shows how much power the egg

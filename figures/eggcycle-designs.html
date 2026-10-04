@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>EggCycle Home Designs</title>
+<title>Feed the Egg Home Designs</title>
 <style>
   :root {
     --bg: #f6f4ef; --panel: #ffffffd9; --text: #23211d; --muted: #6b665c;
@@ -83,7 +83,7 @@
 <div id="labels"></div>
 <header>
   <div class="card">
-    <h1 id="title">EggCycle</h1>
+    <h1 id="title">Feed the Egg</h1>
     <p id="subtitle"></p>
     <ul class="specs" id="specs"></ul>
   </div>
@@ -512,7 +512,7 @@
     for (const [k, m] of Object.entries(models)) m.group.visible = k === key;
     for (const b of document.querySelectorAll('[data-model]')) b.setAttribute('aria-pressed', b.dataset.model === key);
     const m = current();
-    document.getElementById('title').textContent = `EggCycle · ${m.title}`;
+    document.getElementById('title').textContent = `Feed the Egg · ${m.title}`;
     document.getElementById('subtitle').textContent = m.subtitle;
     document.getElementById('specs').innerHTML = m.specs.map(s => `<li>${s}</li>`).join('');
     shadow.scale.setScalar(m.dist * 0.4);

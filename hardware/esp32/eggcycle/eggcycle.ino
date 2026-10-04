@@ -1,4 +1,4 @@
-// EggCycle sensor node (ESP32 DevKit v1)
+// Feed the Egg sensor node (ESP32 DevKit v1)
 //
 // Reads the egg's sensors, shuts the gas valve on a methane leak, and POSTs a JSON reading
 // to the laptop receiver (src/climate/ingest.py) every minute.

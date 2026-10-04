@@ -1,4 +1,4 @@
-"""Receive EggCycle sensor readings from the ESP32 and save them for the dashboard.
+"""Receive Feed the Egg sensor readings from the ESP32 and save them for the dashboard.
 
 On the laptop (same Wi-Fi as the egg):
     $env:PYTHONPATH = "src"; python -m climate.ingest           # listen on port 8000

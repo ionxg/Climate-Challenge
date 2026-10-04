@@ -1,4 +1,4 @@
-// EggCycle: parametric model of the egg digester (all sizes in mm at full scale).
+// Feed the Egg: parametric model of the egg digester (all sizes in mm at full scale).
 // Open in OpenSCAD (openscad.org), press F6 to render, then File > Export > STL.
 // `model_scale = 0.1` gives a 1:10 desk model (~15 cm tall) for the pitch table.
 // Same shape as figures/eggcycle-3d.html.
