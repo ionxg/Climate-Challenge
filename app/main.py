@@ -64,9 +64,16 @@ tracks = [
         "Feed the Egg",
         "Our app: power made, biomethane left, digester health and days until soil.",
     ),
+    (
+        "pages/7_Mobile_App.py",
+        "mobile_app.png",
+        "Mobile App",
+        "Scan the Egg and see food waste, methane and electricity on your phone.",
+    ),
 ]
-for row in (tracks[:3], tracks[3:]):
-    for col, (page, image, label, blurb) in zip(st.columns(3), row, strict=True):
+for start in range(0, len(tracks), 3):
+    row = tracks[start : start + 3]
+    for col, (page, image, label, blurb) in zip(st.columns(3), row, strict=False):
         with col.container(border=True):
             st.image(str(BANNERS / image), width="stretch")
             st.page_link(page, label=f"**{label}**")
